@@ -36,44 +36,28 @@ func InverseTransformExample(pathKey *diskv.PathKey) (key string) {
 }
 
 func main() {
-	flatTransform := func(s string) []string { return []string{} }
+	//	flatTransform := func(s string) []string { return []string{} }
+	getIndex := "myindex"
+	getKey := "1572018745"
 
 	d := diskv.New(diskv.Options{
-		BasePath: "my-data-dir/myindex",
-		/*AdvancedTransform: AdvancedTransformExample,
-		InverseTransform:  InverseTransformExample,*/
-		Transform:    flatTransform,
-		CacheSizeMax: 1024 * 1024,
-		Index:        &diskv.BTreeIndex{},
-		IndexLess:    strGreater,
+		BasePath:          "my-data-dir",
+		AdvancedTransform: AdvancedTransformExample,
+		InverseTransform:  InverseTransformExample,
+		CacheSizeMax:      1024 * 1024,
+		//		Index:        &diskv.BTreeIndex{},
+		//		IndexLess:    strGreater,
 	})
 
-	for k, got := range d.Index.Keys("", 1) {
-		fmt.Println(k, got)
-	}
-	/*
-		for _, key := range d.Index.Keys("myindex/", 2) {
-			keys = append(keys, key)
-		}
-
-		fmt.Println(keys)*/
-
-	rkey := "myindex/1572022944"
-	if readVal, err := d.Read(rkey); err != nil {
+	if readVal, err := d.Read(getIndex + "/" + getKey); err != nil {
 		fmt.Printf("\nread: %s", err)
 	} else {
 		fmt.Printf("\n%s", readVal)
 	}
 
-	rkey = "myindex/1572022941"
-	if readVal, err := d.Read(rkey); err != nil {
-		fmt.Printf("\nread: %s", err)
-	} else {
-		fmt.Printf("\n%s", readVal)
-	}
+	getIndex = "rubbish"
 
-	rkey = "myindex/rubbish"
-	if readVal, err := d.Read(rkey); err != nil {
+	if readVal, err := d.Read(getIndex + "/" + getKey); err != nil {
 		fmt.Printf("\nread: %s", err)
 	} else {
 		fmt.Printf("\n%s", readVal)
