@@ -5,7 +5,6 @@ import (
 	"fmt"
 	//	"io"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/peterbourgon/diskv"
@@ -24,6 +23,7 @@ type Store struct {
 
 func strLess(a, b string) bool { return a > b }
 
+/*
 func AdvancedTransformExample(key string) *diskv.PathKey {
 	path := strings.Split(key, "/")
 	last := len(path) - 1
@@ -46,6 +46,7 @@ func InverseTransformExample(pathKey *diskv.PathKey) (key string) {
 	}
 	return strings.Join(pathKey.Path, "/") + pathKey.FileName[:len(pathKey.FileName)-len(defaultBlobExt)]
 }
+*/
 
 func Create(Base string, Index string) Store {
 	log.Println("start create")
@@ -53,12 +54,12 @@ func Create(Base string, Index string) Store {
 	r := Store{}
 
 	d := diskv.New(diskv.Options{
-		BasePath:          Base,
-		AdvancedTransform: AdvancedTransformExample,
-		InverseTransform:  InverseTransformExample,
-		CacheSizeMax:      1024 * 1024,
-		Index:             &diskv.BTreeIndex{},
-		IndexLess:         strLess,
+		BasePath: Base + "/" + Index,
+		//AdvancedTransform: AdvancedTransformExample,
+		//InverseTransform:  InverseTransformExample,
+		CacheSizeMax: 1024 * 1024,
+		Index:        &diskv.BTreeIndex{},
+		IndexLess:    strLess,
 	})
 
 	r.BaseDir = Base
@@ -77,7 +78,8 @@ func (b *Store) Store(blob []byte) int64 {
 
 	now := time.Now()
 	secs := now.UnixNano()
-	key := fmt.Sprintf("%d", secs)
+	//	key := fmt.Sprintf("%s/%d", b.IndexName, secs)
+	key := fmt.Sprintf("%d%s", secs, defaultBlobExt)
 	if e := b.d.Write(key, blob); e != nil {
 		log.Println("error ", e)
 		return 0
@@ -87,7 +89,7 @@ func (b *Store) Store(blob []byte) int64 {
 }
 
 func (b *Store) Read(key int64) ([]byte, error) {
-	k := fmt.Sprintf("%d", key)
+	k := fmt.Sprintf("%d%s", key, defaultBlobExt)
 	r, e := b.d.Read(k)
 	if e != nil {
 		log.Println("error ", e)
@@ -101,6 +103,14 @@ func (b *Store) Read(key int64) ([]byte, error) {
 
 //func Del()
 
-//func GetLastIndex()
+func (b *Store) GetLatestIndex() string {
+	return b.d.Index.Keys("", 10)[0]
+}
 
-//func GetAllIndex()
+func (b *Store) GetAllIndex() []string {
+	keys := []string{}
+	for _, key := range b.d.Index.Keys("", 10) {
+		keys = append(keys, key)
+	}
+	return keys
+}
